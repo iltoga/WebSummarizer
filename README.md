@@ -1,2 +1,15 @@
-# WebSummarizer
-Ai driven - command line search tool to summarize web searches
+# LangChain Web Summarization
+
+This example summarizes a website
+
+## Setup
+
+```
+pip install -r requirements.txt
+```
+
+## Run
+
+```
+python main.py
+```
