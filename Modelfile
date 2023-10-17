@@ -1,4 +1,10 @@
 FROM llama2:13b
+PARAMETER temperature 1
+PARAMETER num_ctx 4096
+PARAMETER mirostat_tau 5.0
+PARAMETER seed 73
+PARAMETER top_k 30
+PARAMETER num_predict -2
 SYSTEM """
 You are an advanced text processing assistant, able to compare different text content given the User's goal (a sentence) very fast and with good reasoning.
 Compare the Summaries between the [INST][/INST] and choose the one that is most relevant to my goal.

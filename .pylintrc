@@ -1,0 +1,55 @@
+[MASTER]
+max-line-length=120
+disable = line-too-long, C0301, W0511, W1203
+
+[FORMAT]
+indent-string='    '
+
+[MESSAGES CONTROL]
+enable = useless-suppression, use-symbolic-message-instead, useless-return, inconsistent-return-statements
+
+[DESIGN]
+max-args=5
+max-statements=50
+max-locals=15
+
+[EXCEPTIONS]
+overgeneral-exceptions=Exception
+
+[CLASSES]
+min-public-methods=2
+max-public-methods=20
+
+[REPORTS]
+reports=no
+score=no
+
+[LOGGING]
+logging-modules=logging
+
+[TYPECHECK]
+generated-members=objects
+
+[SPELLING]
+spelling-dict=
+spelling-ignore-words=
+spelling-private-dict-file=
+spelling-store-unknown-words=no
+
+[MISCELLANEOUS]
+good-names=i, j, k, ex, Run, _
+
+[VARIABLES]
+variable-rgx=[a-z_][a-z0-9_]{2,30}$
+argument-rgx=[a-z_][a-z0-9_]{2,30}$
+attr-rgx=[a-z_][a-z0-9_]{2,30}$
+
+[SIMILARITIES]
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=yes
+min-similarity-lines=4
+
+[IMPORTS]
+allow-wildcard-with-all=no
+deprecated-modules=regsub,string,TERMIOS,Bastion,rexec

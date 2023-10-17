@@ -1,11 +1,9 @@
-import json
 import os
 import re
 
 import dotenv
 import jinja2
 from fuzzywuzzy import fuzz
-from icecream import ic
 from langchain.chains.summarize import load_summarize_chain
 from langchain.document_loaders import WebBaseLoader
 from langchain.llms import Ollama
@@ -17,8 +15,9 @@ j2env = jinja2.Environment(loader=jinja2.FileSystemLoader("."))
 # Initialize Google credentials
 GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-LLM_MODEL = os.getenv("LLM_MODEL")
-MIN_SCORE = int(os.getenv("MIN_SCORE", "90"))
+LLM_MODEL = os.getenv("LLM_MODEL", "zephyr")
+MIN_SCORE = int(os.getenv("MIN_SCORE", "70"))
+PROMPT_TEMPLATE = os.getenv("PROMPT_TEMPLATE", "prompts/zephyr.j2")
 
 # Initialize Google Search API Wrapper
 search = GoogleSearchAPIWrapper(search_engine="iltoga", google_cse_id=GOOGLE_CSE_ID, google_api_key=GOOGLE_API_KEY)
@@ -96,7 +95,6 @@ def fetch_and_summarize(num_results, query, search_goal):
         # Update best_matches with the summary
         match["summary"] = selection
         match["ranking_score"] = match["score"] / highest_score
-        ic(match)
 
     # Prepare the data for the template by iterating over best_matches
     data = {
@@ -105,16 +103,13 @@ def fetch_and_summarize(num_results, query, search_goal):
     }
 
     # Load and render the template
-    template = j2env.get_template("prompts/default.j2")
+    template = j2env.get_template(PROMPT_TEMPLATE)
     prompt = template.render(data)
-    ic(prompt)
 
     # Submit the prompt to Ollama
     answers = llm.generate([prompt])
     first_answer = answers.generations[0][0].text
-    ic(first_answer)
     json_object = parse_string_to_json_v2(first_answer)
-    ic(json_object)
 
     selected_summary_index = int(json_object["idx"]) - 1
     selection = best_matches[selected_summary_index]
@@ -122,24 +117,36 @@ def fetch_and_summarize(num_results, query, search_goal):
     return selection, reason
 
 
-# Get user input for number of results, query, and search goal
-num_results = int(input("Number of results (max 10): "))
-query = input("Query: ")
-search_goal = input("Goal of your search: ")
-# # @TODO for testing
-# num_results = 5
-# query = "build bamboo house Bali"
-# search_goal = "I want to build a house in bali made in concrete and bamboo without spending a fortune"
+def main(n_results: int, search_query: str, search_objective: str) -> dict:
+    # Clamp n_results to a maximum of 10
+    n_results = min(n_results, 10)
 
-# Clamp num_results to a maximum of 10
-num_results = min(num_results, 10)
+    # Fetch and summarize
+    res, desc = fetch_and_summarize(n_results, search_query, search_objective)
 
-# Fetch and summarize
-res, desc = fetch_and_summarize(num_results, query, search_goal)
-print(res.get("link"))
-print(res.get("snippet"))
-print(f"score: {res.get('score')}")
-print(f"ranking score: {res.get('ranking_score')}")
-print("Ai content:")
-print(f"summary: {res.get('summary')}")
-print(f"reason: {desc}")
+    result_dict = {
+        "link": res.get("link"),
+        "snippet": res.get("snippet"),
+        "score": res.get("score"),
+        "ranking_score": res.get("ranking_score"),
+        "ai_content": {"summary": res.get("summary"), "reason": desc},
+    }
+
+    return result_dict
+
+
+if __name__ == "__main__":
+    num_results = int(input("Number of results (max 10): "))
+    query = input("Query: ")
+    search_goal = input("Goal of your search: ")
+
+    results = main(num_results, query, search_goal)
+
+    print("Search Results:")
+    print(f"Link: {results.get('link')}")
+    print(f"Snippet: {results.get('snippet')}")
+    print(f"Score: {results.get('score')}")
+    print(f"Ranking Score: {results.get('ranking_score')}")
+    print("AI Content:")
+    print(f"Summary: {results['ai_content'].get('summary')}")
+    print(f"Reason: {results['ai_content'].get('reason')}")
